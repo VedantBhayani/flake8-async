@@ -75,27 +75,6 @@ def func_has_await(node: cst.FunctionDef) -> bool:
     This matches Visitor124's logic for determining if ASYNC124 should fire.
     Nested functions are not checked - they're handled separately.
     """
-    # Match await expressions, async with, async for at any depth, but not inside
-    # nested function definitions (which have their own scope).
-    # We use a matcher that finds these constructs anywhere in the body except
-    # inside nested FunctionDef/Lambda nodes.
-    await_pattern = (
-        m.Await()
-        | m.With(asynchronous=m.Asynchronous())
-        | m.For(asynchronous=m.Asynchronous())
-    )
-    # Find all await patterns, then filter out those inside nested functions
-    for match in m.findall(node.body, await_pattern):
-        # Check if this match is inside a nested function
-        # We can't easily do this with matchers, so use a different approach:
-        # match only at the top level of the body, not inside nested functions
-        pass
-    # Simpler approach: use a matcher that doesn't descend into FunctionDef/Lambda
-    # libcst matchers don't have a direct "not inside" operator, so we check manually
-    # by visiting the tree and skipping nested functions.
-    # For now, use a simpler check: only look at the top-level statements
-    # This is a approximation but matches the typical case.
-    # Actually, let's use a more precise approach with a custom visitor.
     return _func_has_await_impl(node.body)
 
 
