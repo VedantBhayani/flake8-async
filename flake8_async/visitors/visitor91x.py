@@ -79,7 +79,11 @@ def func_has_await(node: cst.FunctionDef) -> bool:
     # nested function definitions (which have their own scope).
     # We use a matcher that finds these constructs anywhere in the body except
     # inside nested FunctionDef/Lambda nodes.
-    await_pattern = m.Await() | m.With(asynchronous=m.Asynchronous()) | m.For(asynchronous=m.Asynchronous())
+    await_pattern = (
+        m.Await()
+        | m.With(asynchronous=m.Asynchronous())
+        | m.For(asynchronous=m.Asynchronous())
+    )
     # Find all await patterns, then filter out those inside nested functions
     for match in m.findall(node.body, await_pattern):
         # Check if this match is inside a nested function
@@ -98,13 +102,9 @@ def func_has_await(node: cst.FunctionDef) -> bool:
 def _func_has_await_impl(body: cst.BaseSuite) -> bool:
     """Check for await/async with/async for in function body, excluding nested functions."""
     visitor = _AwaitFinderVisitor()
-    if isinstance(body, cst.SimpleStatementSuite):
-        for stmt in body.body:
-            stmt.visit(visitor)
-            if visitor.found:
-                return True
-        return False
-    elif isinstance(body, cst.IndentedBlock):
+    if isinstance(body, cst.SimpleStatementSuite) or isinstance(
+        body, cst.IndentedBlock
+    ):
         for stmt in body.body:
             stmt.visit(visitor)
             if visitor.found:
